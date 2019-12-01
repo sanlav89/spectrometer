@@ -15,12 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         widget.cpp \
     shproto.cpp \
-    plotcalibr.cpp
+    plot.cpp
 
 HEADERS  += widget.h \
     shproto.h \
     helpers.h \
-    plotcalibr.h
+    plotcalibr.h \
+    plot.h
 
 INCLUDEPATH += C:/Qt/qwt-6.1.3/include
 LIBS += -LC:/Qt/qwt-6.1.3/lib -lqwt
