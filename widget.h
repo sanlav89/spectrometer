@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QDataStream>
 #include "plot.h"
+#include "uartconnecttomka.h"
 
 class Widget : public QWidget
 {
