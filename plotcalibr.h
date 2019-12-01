@@ -38,8 +38,9 @@ public:
                QWidget* parent = NULL);
     // Обновление данных на графиках
     void UpdateCurves(
-            double dataX[1024],     // Ось X
-            double dataY[1024]      // Ось Y
+            double* dataX,     // Ось X
+            double* dataY,     // Ось Y
+            bool lgScale
             );
     // Установка масштаба
     void SetScale(double Xmin, double Xmax, double Ymin, double Ymax);
@@ -64,7 +65,13 @@ private:
     void initCurves();
     void initLegendItem();
     void initMarkers();
-
+    // Информация для отображения кривых
+    static const int N = 8192;
+    static const int N_SM_WIN = 16;
+    double y1[N];
+    double y2[N];
+    void smoothCurve0(double* dataY, int nWin);
+    void dataToLgScale();
 };
 //==============================================================================
 

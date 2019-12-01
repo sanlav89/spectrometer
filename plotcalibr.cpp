@@ -105,6 +105,7 @@ void PlotCalibr::initCurves()
         curves[i]->setPen(curvePen[i]);
 //        curves[i]->setB
     }
+//    curves[0]->setStyle(QwtPlotCurve::Sticks);
     curves[0]->setTitle(" Спектр ");
     curves[1]->setTitle(" Сглаженный спектр ");
 }
@@ -158,11 +159,12 @@ void PlotCalibr::initMarkers()
 }
 
 /*
- * Установить масштаб
+ * Обновить данные на графике
  */
 void PlotCalibr::UpdateCurves(
-        double dataX[1024],
-        double dataY[1024]
+        double* dataX,
+        double* dataY,
+        bool lgScale
         )
 {
     double peakX_min; // Координата X первого маркера (минимума)
@@ -172,7 +174,12 @@ void PlotCalibr::UpdateCurves(
     // Пики для 2-й кривой
     QString peakLabel;
     // Обновление кривых
-    curves[0]->setSamples(dataX, dataY, 8192);
+    smoothCurve0(dataY, N_SM_WIN);
+    memcpy(y1, dataY, sizeof(double) * N);
+    if (lgScale)
+        dataToLgScale();
+    curves[0]->setSamples(dataX, y1, N);
+    curves[1]->setSamples(dataX, y2, N);
     double delta = (curves[0]->maxYValue() - curves[0]->minYValue()) * 0.1;
     peakX_min = curves[0]->minXValue();
     peakY_min = curves[0]->minYValue();
@@ -187,34 +194,6 @@ void PlotCalibr::UpdateCurves(
     peakText.setText(peakLabel);
     peakMarker[1]->setValue(peakX_min, peakY_max);
     peakMarker[1]->setLabel(peakText);
-//    peakLabel.sprintf("Разность: %.3g дБ", peakY_max - peakY_min);
-//    diffPeaksText.setText(peakLabel);
-//    diffPeaksLabel->setText(diffPeaksText);
-
-    double dataY2[8192];
-    int k1, k2, dk;
-    double cur_value;
-    dk = 16 / 2;
-    for (int i = 0; i < 8192; i++) {
-        cur_value = 0;
-        if (i < dk) {
-            k1 = 0;
-            k2 = i + dk;
-        } else if (i >= 8192 - dk) {
-            k1 = i - dk;
-            k2 = 8192;
-        } else {
-            k1 = i - dk;
-            k2 = i + dk;
-        }
-        for (int j = k1; j < k2; j++) {
-            cur_value += dataY[j];
-        }
-        cur_value /= (2 * dk);
-        dataY2[i] = cur_value;
-    }
-
-    curves[1]->setSamples(dataX, dataY2, 8192);
     replot();
 }
 
@@ -227,5 +206,44 @@ void PlotCalibr::SetScale(double Xmin, double Xmax, double Ymin, double Ymax)
     setAxisScale(QwtPlot::yLeft, Ymin, Ymax);
     zoomer->setZoomBase();
     replot();
+}
+
+/*
+ * Сгладить скользящим средним массив dataY[]
+ */
+void PlotCalibr::smoothCurve0(double* dataY, int nWin)
+{
+    int k1, k2, dk;
+    double cur_value;
+    dk = nWin / 2;
+    for (int i = 0; i < N; i++) {
+        cur_value = 0;
+        if (i < dk) {
+            k1 = 0;
+            k2 = i + dk;
+        } else if (i >= N - dk) {
+            k1 = i - dk;
+            k2 = N;
+        } else {
+            k1 = i - dk;
+            k2 = i + dk;
+        }
+        for (int j = k1; j < k2; j++) {
+            cur_value += dataY[j];
+        }
+        cur_value /= (2 * dk);
+        y2[i] = cur_value;
+    }
+}
+
+/*
+ * Перевод в логарифмическую шкалу
+ */
+void PlotCalibr::dataToLgScale()
+{
+    for (int i = 0; i < 8192; i++) {
+        y1[i] = 20 * log10(y1[i]);
+        y2[i] = 20 * log10(y2[i]);
+    }
 }
 //==============================================================================
