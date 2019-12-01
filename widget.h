@@ -2,6 +2,8 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QFile>
+#include <QDataStream>
 
 class Widget : public QWidget
 {
@@ -10,6 +12,8 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = 0);
     ~Widget();
+    void readTestAndSaveToUartTest();
+    void createAndSendPacket();
 };
 
 #endif // WIDGET_H
