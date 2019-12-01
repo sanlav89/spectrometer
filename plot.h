@@ -2,12 +2,12 @@
 // (C) Copyright 2019 MIET
 // Moscow, Zelenograd, Russia
 //
-// Device:      DISS
-// Module:      MPR
-// Component:   AFC calibration utility
-// File:        plotcalibr.h
-// Function:    Object for displaying calibration information on a graph
-// Notes:
+// Device:      -
+// Module:      -
+// Component:   -
+// File:        plot.h
+// Function:    Object for displaying spectrum information on a graph
+// Notes:       -
 // Author:      A.Lavrinenko
 //==============================================================================
 #ifndef PLOTCALIBR_H
@@ -22,15 +22,15 @@
 #include <qwt_plot_textlabel.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_zoomer.h>
-#include "helpers.h"
+#include "plot_helpers.h"
 
 /*
  * Объект для отображения информации о калибровке на графике
  */
-class PlotCalibr : public QwtPlot
+class Plot : public QwtPlot
 {
 public:
-    PlotCalibr(QString title,       // Название графика
+    Plot(QString title,       // Название графика
                QString xAxisTitle,  // Название оси X
                QString yAxisTitle,  // Название оси Y
                QColor beginColor,   // Начальный цвет фона (градиент)

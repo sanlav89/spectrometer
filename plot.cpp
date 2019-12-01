@@ -2,15 +2,15 @@
 // (C) Copyright 2019 MIET
 // Moscow, Zelenograd, Russia
 //
-// Device:      DISS
-// Module:      MPR
-// Component:   AFC calibration utility
-// File:        plotcalibr.c
-// Function:    Object for displaying calibration information on a graph
-// Notes:
+// Device:      -
+// Module:      -
+// Component:   -
+// File:        plot.cpp
+// Function:    Object for displaying spectrum information on a graph
+// Notes:       -
 // Author:      A.Lavrinenko
 //==============================================================================
-#include "plotcalibr.h"
+#include "plot.h"
 #include <qwt_plot_grid.h>
 #include <qwt_plot_layout.h>
 #include <qwt_symbol.h>
@@ -19,7 +19,7 @@
 /*
  * Объект для отображения информации о калибровке на графике
  */
-PlotCalibr::PlotCalibr(
+Plot::Plot(
         QString title,
         QString xAxisTitle,
         QString yAxisTitle,
@@ -41,7 +41,7 @@ PlotCalibr::PlotCalibr(
 /*
  * Инициализация элементов графика
  */
-void PlotCalibr::initCanvasDesign(
+void Plot::initCanvasDesign(
         QString title,
         QString xAxisTitle,
         QString yAxisTitle,
@@ -90,7 +90,7 @@ void PlotCalibr::initCanvasDesign(
 /*
  * Инициализация кривых
  */
-void PlotCalibr::initCurves()
+void Plot::initCurves()
 {
     QPen curvePen[2] = {
         QPen(QColor(128, 255, 128)),
@@ -113,7 +113,7 @@ void PlotCalibr::initCurves()
 /*
  * Установить "Легенду"
  */
-void PlotCalibr::initLegendItem()
+void Plot::initLegendItem()
 {
     LegendItem* legend = new LegendItem;
     legend->attach(this);
@@ -132,7 +132,7 @@ void PlotCalibr::initLegendItem()
 /*
  * Инициализация маркеров
  */
-void PlotCalibr::initMarkers()
+void Plot::initMarkers()
 {
     for (int i = 0; i < 2; i++) {
         peakMarker[i] = new QwtPlotMarker();
@@ -161,7 +161,7 @@ void PlotCalibr::initMarkers()
 /*
  * Обновить данные на графике
  */
-void PlotCalibr::UpdateCurves(
+void Plot::UpdateCurves(
         double* dataX,
         double* dataY,
         bool lgScale
@@ -200,7 +200,7 @@ void PlotCalibr::UpdateCurves(
 /*
  * Установить масштаб осей координат
  */
-void PlotCalibr::SetScale(double Xmin, double Xmax, double Ymin, double Ymax)
+void Plot::SetScale(double Xmin, double Xmax, double Ymin, double Ymax)
 {
     setAxisScale(QwtPlot::xBottom, Xmin, Xmax);
     setAxisScale(QwtPlot::yLeft, Ymin, Ymax);
@@ -211,7 +211,7 @@ void PlotCalibr::SetScale(double Xmin, double Xmax, double Ymin, double Ymax)
 /*
  * Сгладить скользящим средним массив dataY[]
  */
-void PlotCalibr::smoothCurve0(double* dataY, int nWin)
+void Plot::smoothCurve0(double* dataY, int nWin)
 {
     int k1, k2, dk;
     double cur_value;
@@ -239,7 +239,7 @@ void PlotCalibr::smoothCurve0(double* dataY, int nWin)
 /*
  * Перевод в логарифмическую шкалу
  */
-void PlotCalibr::dataToLgScale()
+void Plot::dataToLgScale()
 {
     for (int i = 0; i < 8192; i++) {
         y1[i] = 20 * log10(y1[i]);

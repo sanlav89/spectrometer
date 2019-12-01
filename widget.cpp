@@ -48,10 +48,10 @@ Widget::Widget(QWidget *parent)
 //    }
 
     // Objects
-    plot = new PlotCalibr(
-                "АЧХ",
-                "Частота [Гц]",
-                "Амплитуда [дБ]",
+    plot = new Plot(
+                "Спектр",
+                "Каналы",
+                "Отсчеты",
                 QColor(75, 75, 75),
                 QColor(25, 25, 25));
     // Init Object's Properties
@@ -60,12 +60,14 @@ Widget::Widget(QWidget *parent)
     QGridLayout* mainLayout = new QGridLayout;
     mainLayout->addWidget(plot, 0, 0);
     setLayout(mainLayout);
-    setWindowTitle("Спектрометр");
+    setWindowTitle("Многоканальный анализатор (МКА)");
 
     for (int i = 0; i < 8192; i++) {
         dataX[i] = i;
+        spectrum.flags[i] = false;
+        spectrum.bins_accum[i] = 0;
+        spectrum.bins_sum[i] = 0;
     }
-    spectrum = {0};
 //    readTestAndSaveToUartTest();
     parsePacketsFromTestFile("uart_test_data.bin");
 
