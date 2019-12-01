@@ -21,7 +21,8 @@ HEADERS  += widget.h \
     shproto.h \
     helpers.h \
     plotcalibr.h \
-    plot.h
+    plot.h \
+    plot_helpers.h
 
 INCLUDEPATH += C:/Qt/qwt-6.1.3/include
 LIBS += -LC:/Qt/qwt-6.1.3/lib -lqwt
