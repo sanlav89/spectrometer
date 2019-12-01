@@ -1,6 +1,7 @@
 #include "widget.h"
 #include "shproto.h"
 #include <QDebug>
+#include <QGridLayout>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -45,6 +46,25 @@ Widget::Widget(QWidget *parent)
 //            // Поле packet.len содержит длину payload
 //        }
 //    }
+
+    // Objects
+    plot = new PlotCalibr(
+                "АЧХ",
+                "Частота [Гц]",
+                "Амплитуда [дБ]",
+                QColor(75, 75, 75),
+                QColor(25, 25, 25));
+    // Init Object's Properties
+    plot->setMinimumWidth(800);
+
+    QGridLayout* mainLayout = new QGridLayout;
+    mainLayout->addWidget(plot, 0, 0);
+    setLayout(mainLayout);
+    setWindowTitle("Спектрометр");
+
+    for (int i = 0; i < 8192; i++) {
+        dataX[i] = i;
+    }
     spectrum = {0};
 //    readTestAndSaveToUartTest();
     parsePacketsFromTestFile("uart_test_data.bin");
@@ -155,9 +175,11 @@ void Widget::updateSpectrum(uint8_t* data, uint16_t begin, uint16_t count)
     if (checkSpectrumFlags()) {
         spectrum.spectrum_cnt++;
         for (int i = 0; i < 8192; i++) {
-            spectrum.bins_accum[i] = spectrum.bins_sum[i] * 1.0 / spectrum.spectrum_cnt;
-            qDebug() << spectrum.bins_accum[i];
+            spectrum.bins_accum[i] = spectrum.bins_sum[i] * 1.0 /
+                                     spectrum.spectrum_cnt;
+            spectrum.flags[i] = false;
         }
+        plot->UpdateCurves(dataX, spectrum.bins_accum, true);
     }
 }
 

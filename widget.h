@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QFile>
 #include <QDataStream>
+#include "plotcalibr.h"
 
 class Widget : public QWidget
 {
@@ -16,6 +17,7 @@ public:
     void parsePacketsFromTestFile(QString filename);
 
 private:
+    PlotCalibr* plot;
     struct {
         int spectrum_cnt;
         uint32_t bins_sum[8192];
@@ -24,6 +26,7 @@ private:
     } spectrum;
     void updateSpectrum(uint8_t* data, uint16_t begin, uint16_t count);
     bool checkSpectrumFlags();
+    double dataX[8192];
 };
 
 #endif // WIDGET_H
