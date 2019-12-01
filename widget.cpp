@@ -45,6 +45,7 @@ Widget::Widget(QWidget *parent)
 //            // Поле packet.len содержит длину payload
 //        }
 //    }
+    spectrum = {0};
 //    readTestAndSaveToUartTest();
     parsePacketsFromTestFile("uart_test_data.bin");
 
@@ -132,10 +133,39 @@ void Widget::parsePacketsFromTestFile(QString filename)
                 // Обрабатываем принятый пакет с кодом команды равным 0x03
                 // Поле packet.len содержит длину payload
                 memcpy(&packet_num, &packet.data[2], sizeof(uint16_t));
-                qDebug() << packet_num;
+//                qDebug() << packet_num << packet.len;
+                updateSpectrum(&packet.data[4], packet_num, (packet.len - 4) / 3);
                 packet = {packet_buff_rx, sizeof(packet_buff_rx), 0, 0, 0, 0, 0, 0};
             }
         }
     }
 
+}
+
+void Widget::updateSpectrum(uint8_t* data, uint16_t begin, uint16_t count)
+{
+    uint32_t bin;
+    for (int i = 0; i < count; i++) {
+        bin = (data[3 * i + 2] << 16) |
+              (data[3 * i + 1] << 8) |
+              (data[3 * i + 0] << 0);
+        spectrum.bins_sum[begin + i] = bin;
+        spectrum.flags[begin + i] = true;
+    }
+    if (checkSpectrumFlags()) {
+        spectrum.spectrum_cnt++;
+        for (int i = 0; i < 8192; i++) {
+            spectrum.bins_accum[i] = spectrum.bins_sum[i] * 1.0 / spectrum.spectrum_cnt;
+            qDebug() << spectrum.bins_accum[i];
+        }
+    }
+}
+
+bool Widget::checkSpectrumFlags()
+{
+    for (int i = 0; i < 8192; i++) {
+        if (!spectrum.flags[i])
+            return false;
+    }
+    return true;
 }
