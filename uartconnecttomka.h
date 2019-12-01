@@ -10,11 +10,11 @@
 //#include <QTime>
 //#include <QDate>
 
-class uartConnectToMka : public QObject
+class UartConnectToMka : public QObject
 {
     Q_OBJECT
 public:
-    explicit uartConnectToMka(QObject *parent = nullptr);
+    explicit UartConnectToMka(QObject *parent = nullptr);
     bool openSerialPort();
     void closeSerialPort();
 

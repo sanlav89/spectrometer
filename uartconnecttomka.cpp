@@ -1,7 +1,7 @@
 #include "uartconnecttomka.h"
 #include <QDebug>
 
-uartConnectToMka::uartConnectToMka(QObject *parent) : QObject(parent)
+UartConnectToMka::UartConnectToMka(QObject *parent) : QObject(parent)
 {
     serialPort = new QSerialPort();
     timer = new QTimer;
@@ -13,7 +13,7 @@ uartConnectToMka::uartConnectToMka(QObject *parent) : QObject(parent)
     logFile = new QFile;
 }
 
-bool uartConnectToMka::openSerialPort()
+bool UartConnectToMka::openSerialPort()
 {
     QString portName;
     if (findMkaDevice(&portName)) {
@@ -37,7 +37,7 @@ bool uartConnectToMka::openSerialPort()
     }
 }
 
-void uartConnectToMka::closeSerialPort()
+void UartConnectToMka::closeSerialPort()
 {
     if (serialPort->isOpen())
         serialPort->close();
@@ -48,7 +48,7 @@ void uartConnectToMka::closeSerialPort()
 }
 
 // TODO: Узнать ID прибора, по кототому его можно опознать
-bool uartConnectToMka::findMkaDevice(QString* pName)
+bool UartConnectToMka::findMkaDevice(QString* pName)
 {
     QString description;
     QString manufacturer;
@@ -72,7 +72,7 @@ bool uartConnectToMka::findMkaDevice(QString* pName)
     return isFinded;
 }
 
-void uartConnectToMka::openLogFile()
+void UartConnectToMka::openLogFile()
 {
     // Начало записи в файл телеметрии (TELEMETRIA.TXT)
     QString filename;
@@ -94,7 +94,7 @@ void uartConnectToMka::openLogFile()
     }
 }
 
-void uartConnectToMka::closeLogFile()
+void UartConnectToMka::closeLogFile()
 {
 //    QTime curTime = QTime::currentTime();
 //    QString time = curTime.toString("hh:mm:ss.zzz\n");
@@ -105,14 +105,14 @@ void uartConnectToMka::closeLogFile()
     }
 }
 
-void uartConnectToMka::uartReadData()
+void UartConnectToMka::uartReadData()
 {
 //    qDebug() << serialPort->readAll();
     QByteArray data = serialPort->readAll();
     logFile->write(data);
 }
 
-void uartConnectToMka::uartConnectTimeout()
+void UartConnectToMka::uartConnectTimeout()
 {
     emit connectionFailed();
     if (serialPort->isOpen())
