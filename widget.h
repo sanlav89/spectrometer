@@ -13,7 +13,7 @@ public:
     Widget(QWidget *parent = 0);
     ~Widget();
     void readTestAndSaveToUartTest();
-    void createAndSendPacket();
+    void parsePacketsFromTestFile(QString filename);
 };
 
 #endif // WIDGET_H

@@ -45,7 +45,8 @@ Widget::Widget(QWidget *parent)
 //            // Поле packet.len содержит длину payload
 //        }
 //    }
-    readTestAndSaveToUartTest();
+//    readTestAndSaveToUartTest();
+    parsePacketsFromTestFile("uart_test_data.bin");
 
 }
 
@@ -101,9 +102,40 @@ void Widget::readTestAndSaveToUartTest()
 
             // output(packet_tx.data, packet_tx.len);  // Передаём пакет через UART
             uartTestFile.write((char*)packet_tx.data, packet_tx.len);
-            packetNum++;
+            packetNum += 128;
         }
         qDebug() << "Uart test file had written";
+    }
+
+}
+
+void Widget::parsePacketsFromTestFile(QString filename)
+{
+    QFile uartTestFile(filename);
+    QDataStream uartTestFileDs(&uartTestFile);
+    uint8_t rx_byte;
+    static unsigned char packet_buff_rx[512];
+    static shproto_struct packet;
+    uint16_t packet_num;
+
+    if (!uartTestFile.open(QIODevice::ReadOnly)) {
+            qDebug() << "Can't open file" << uartTestFile.fileName();
+    } else {
+        packet = {packet_buff_rx, sizeof(packet_buff_rx), 0, 0, 0, 0, 0, 0};
+        while (!uartTestFileDs.atEnd()) {    // Считываем байты из FIFO или еще откуда-нибудь
+            uartTestFileDs >> rx_byte;
+            shproto_byte_received(&packet, rx_byte); // Передаем 1 байт парсеру пакетов
+            if (!packet.ready)
+               continue;       // Пакет еще не найден или контрольная сумма некорректна
+            packet.ready = 0;   // Обязательно сбрасываем флаг приёма пакета
+            if (packet.cmd == 0x01) {
+                // Обрабатываем принятый пакет с кодом команды равным 0x03
+                // Поле packet.len содержит длину payload
+                memcpy(&packet_num, &packet.data[2], sizeof(uint16_t));
+                qDebug() << packet_num;
+                packet = {packet_buff_rx, sizeof(packet_buff_rx), 0, 0, 0, 0, 0, 0};
+            }
+        }
     }
 
 }
