@@ -56,9 +56,19 @@ Widget::Widget(QWidget *parent)
                 QColor(25, 25, 25));
     // Init Object's Properties
     plot->setMinimumWidth(800);
+    getSpectrBtn = new QPushButton("Прочитать спектр");
+    showSpectrBtn = new QPushButton("Построить спектр");
+    prBar = new QProgressBar;
+    prBar->setRange(0, seconds);
+
+    connect(getSpectrBtn, SIGNAL(clicked()), this, SLOT(onGetSpectrBtn()));
+    connect(showSpectrBtn, SIGNAL(clicked()), this, SLOT(onShowSpectrBtn()));
 
     QGridLayout* mainLayout = new QGridLayout;
-    mainLayout->addWidget(plot, 0, 0);
+    mainLayout->addWidget(plot, 0, 0, 10, 20);
+    mainLayout->addWidget(getSpectrBtn, 10, 0, 1, 2);
+    mainLayout->addWidget(showSpectrBtn, 10, 2, 1, 2);
+    mainLayout->addWidget(prBar, 10, 4, 1, 16);
     setLayout(mainLayout);
     setWindowTitle("Многоканальный анализатор (МКА)");
 
@@ -67,10 +77,22 @@ Widget::Widget(QWidget *parent)
         spectrum.flags[i] = false;
         spectrum.bins_accum[i] = 0;
         spectrum.bins_sum[i] = 0;
+        spectrum.spectrum_cnt[i] = 0;
     }
 //    readTestAndSaveToUartTest();
-    parsePacketsFromTestFile("uart_test_data.bin");
 
+//    for (int i = 1000; i < 1100; i++)
+//        qDebug("0x%08X", spectrum.bins_sum[i]);
+
+    uartConnect = new UartConnectToMka;
+    connect(uartConnect, SIGNAL(dataPartReady(QByteArray)),
+            this, SLOT(parsePacketsFromUart(QByteArray)));
+    timer = new QTimer;
+    connect(timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+    if (!uartConnect->openSerialPort()) {
+        getSpectrBtn->setEnabled(false);
+        showSpectrBtn->setEnabled(false);
+    }
 }
 
 Widget::~Widget()
@@ -147,6 +169,7 @@ void Widget::parsePacketsFromTestFile(QString filename)
         packet = {packet_buff_rx, sizeof(packet_buff_rx), 0, 0, 0, 0, 0, 0};
         while (!uartTestFileDs.atEnd()) {    // Считываем байты из FIFO или еще откуда-нибудь
             uartTestFileDs >> rx_byte;
+//            qDebug("0x%02X", rx_byte);
             shproto_byte_received(&packet, rx_byte); // Передаем 1 байт парсеру пакетов
             if (!packet.ready)
                continue;       // Пакет еще не найден или контрольная сумма некорректна
@@ -155,13 +178,41 @@ void Widget::parsePacketsFromTestFile(QString filename)
                 // Обрабатываем принятый пакет с кодом команды равным 0x03
                 // Поле packet.len содержит длину payload
                 memcpy(&packet_num, &packet.data[2], sizeof(uint16_t));
-//                qDebug() << packet_num << packet.len;
+                qDebug() << packet_num << packet.len;
                 updateSpectrum(&packet.data[4], packet_num, (packet.len - 4) / 3);
                 packet = {packet_buff_rx, sizeof(packet_buff_rx), 0, 0, 0, 0, 0, 0};
             }
         }
     }
+}
 
+void Widget::parsePacketsFromUart(QByteArray ba)
+{
+//    uint8_t* rx_data;
+//    static unsigned char packet_buff_rx[512];
+//    static shproto_struct packet;
+//    uint16_t packet_num;
+//    packet = {packet_buff_rx, sizeof(packet_buff_rx), 0, 0, 0, 0, 0, 0};
+//    rx_data = (uint8_t*)ba.data();
+
+//    static uint16_t full_len = 0;
+
+//    for (int i = 0; i < ba.size(); i++) {
+//        shproto_byte_received(&packet, rx_data[i]); // Передаем 1 байт парсеру пакетов
+//        if (!packet.ready)
+//           continue;       // Пакет еще не найден или контрольная сумма некорректна
+//        packet.ready = 0;   // Обязательно сбрасываем флаг приёма пакета
+//        if (packet.cmd == 0x01) {
+//            // Обрабатываем принятый пакет с кодом команды равным 0x03
+//            // Поле packet.len содержит длину payload
+//            memcpy(&packet_num, &packet.data[2], sizeof(uint16_t));
+//            qDebug() << packet_num << packet.len;
+//            updateSpectrum(&packet.data[4], packet_num, (packet.len - 4) / 3);
+//            packet = {packet_buff_rx, sizeof(packet_buff_rx), 0, 0, 0, 0, 0, 0};
+//        }
+//    }
+//    full_len += ba.size();
+////    qDebug() << full_len << packet.cmd << packet.ready;
 }
 
 void Widget::updateSpectrum(uint8_t* data, uint16_t begin, uint16_t count)
@@ -171,17 +222,18 @@ void Widget::updateSpectrum(uint8_t* data, uint16_t begin, uint16_t count)
         bin = (data[3 * i + 2] << 16) |
               (data[3 * i + 1] << 8) |
               (data[3 * i + 0] << 0);
-        spectrum.bins_sum[begin + i] = bin;
+        spectrum.bins_sum[begin + i] += bin;
         spectrum.flags[begin + i] = true;
+        spectrum.spectrum_cnt[begin + i]++;
     }
     if (checkSpectrumFlags()) {
-        spectrum.spectrum_cnt++;
+//        spectrum.spectrum_cnt++;
         for (int i = 0; i < 8192; i++) {
             spectrum.bins_accum[i] = spectrum.bins_sum[i] * 1.0 /
-                                     spectrum.spectrum_cnt;
+                                     spectrum.spectrum_cnt[i];
             spectrum.flags[i] = false;
         }
-        plot->UpdateCurves(dataX, spectrum.bins_accum, true);
+        plot->UpdateCurves(dataX, spectrum.bins_accum, false);
     }
 }
 
@@ -192,4 +244,36 @@ bool Widget::checkSpectrumFlags()
             return false;
     }
     return true;
+}
+
+// Переопределенная функция, описание действий по закрытию окна
+void Widget::closeEvent(QCloseEvent * event)
+{
+    uartConnect->closeSerialPort();
+    QWidget::closeEvent(event); // Вызов базовой функции закрытия окна
+}
+
+void Widget::onGetSpectrBtn()
+{
+    prBar->setValue(0);
+    uartConnect->sendCmd(0x01);
+    timer->start(1000);
+}
+
+void Widget::onShowSpectrBtn()
+{
+    parsePacketsFromTestFile(uartConnect->logFileName);
+}
+
+void Widget::onTimeout()
+{
+    static int cnt = 0;
+    cnt++;
+    prBar->setValue(cnt);
+    if (cnt == seconds) {
+        cnt = 0;
+        timer->stop();
+        showSpectrBtn->setEnabled(true);
+        uartConnect->sendCmd(0x00);
+    }
 }

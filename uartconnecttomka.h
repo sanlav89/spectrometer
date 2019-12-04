@@ -17,10 +17,11 @@ public:
     explicit UartConnectToMka(QObject *parent = nullptr);
     bool openSerialPort();
     void closeSerialPort();
+    void sendCmd(uint8_t cmd);
+    QString logFileName;
 
 private:
     QSerialPort* serialPort;
-    QTimer* timer;
     QFile* logFile;
     static const uint32_t Baud600000 = 600000;
     bool findMkaDevice(QString* pName);
@@ -29,10 +30,9 @@ private:
 
 private slots:
     void uartReadData();
-    void uartConnectTimeout();
 
 signals:
-    void connectionFailed();
+    void dataPartReady(QByteArray);
 
 public slots:
 };

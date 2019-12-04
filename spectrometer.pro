@@ -27,5 +27,5 @@ HEADERS  += widget.h \
     plot_helpers.h \
     uartconnecttomka.h
 
-INCLUDEPATH += C:/Qt/qwt-6.1.3/include
-LIBS += -LC:/Qt/qwt-6.1.3/lib -lqwt
+INCLUDEPATH += C:/qwt-6.1.3/include
+LIBS += -LC:/qwt-6.1.3/lib -lqwt

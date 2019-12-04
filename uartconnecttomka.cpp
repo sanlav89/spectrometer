@@ -1,15 +1,11 @@
 #include "uartconnecttomka.h"
 #include <QDebug>
+#include "shproto.h"
 
 UartConnectToMka::UartConnectToMka(QObject *parent) : QObject(parent)
 {
     serialPort = new QSerialPort();
-    timer = new QTimer;
-    timer->start(3000);
-
     connect(serialPort, SIGNAL(readyRead()), this, SLOT(uartReadData()));
-    connect(timer, SIGNAL(timeout()), this, SLOT(uartConnectTimeout()));
-
     logFile = new QFile;
 }
 
@@ -18,7 +14,8 @@ bool UartConnectToMka::openSerialPort()
     QString portName;
     if (findMkaDevice(&portName)) {
         serialPort->setPortName(portName);
-        serialPort->setBaudRate(Baud600000);
+//        serialPort->setBaudRate(Baud600000);
+        serialPort->setBaudRate(QSerialPort::Baud115200);
         serialPort->setDataBits(QSerialPort::Data8);
         serialPort->setParity(QSerialPort::NoParity);
         serialPort->setStopBits(QSerialPort::OneStop);
@@ -32,7 +29,7 @@ bool UartConnectToMka::openSerialPort()
             return false;
         }
     } else {
-        qDebug() << "Gps Device didn't find";
+        qDebug() << "MKA Device didn't find";
         return false;
     }
 }
@@ -43,8 +40,21 @@ void UartConnectToMka::closeSerialPort()
         serialPort->close();
     if (logFile->isOpen())
         closeLogFile();
-    timer->stop();
     qDebug() << "Port Closed";
+}
+
+void UartConnectToMka::sendCmd(uint8_t cmd)
+{
+    // Сборка пакета и передача:
+    static unsigned char packet_buff_tx[1024];
+    static shproto_struct packet_tx = {packet_buff_tx, sizeof(packet_buff_tx),
+                                       0, 0, 0, 0, 0, 0};
+    shproto_packet_start(&packet_tx, cmd);     // cmd - код команды, для примера
+//    shproto_packet_add_data(&packet_tx, 0x00);  // Добавляем один байт данных, для примера он равен нулю
+//    //...или не один...
+    shproto_packet_complete(&packet_tx);    // Добавляем маркер конца пакета и контрольную сумму
+//    output(packet_tx.data, packet_tx.len);  // Передаём пакет через UART
+    serialPort->write((char*)packet_tx.data, packet_tx.len);
 }
 
 // TODO: Узнать ID прибора, по кототому его можно опознать
@@ -58,16 +68,16 @@ bool UartConnectToMka::findMkaDevice(QString* pName)
         description = info.description();
         manufacturer = info.manufacturer();
         serialNumber = info.serialNumber();
-//        if (manufacturer == "Prolific"
-//                && description == "Prolific USB-to-Serial Comm Port"
-//                && serialNumber.isEmpty()) {
+        if (manufacturer == "Prolific"
+                && description == "Prolific USB-to-Serial Comm Port"
+                && serialNumber.isEmpty()) {
             qDebug() << info.portName()
                      << description
                      << manufacturer
                      << serialNumber;
             *pName = info.portName();
             isFinded = true;
-//        }
+        }
     }
     return isFinded;
 }
@@ -75,18 +85,17 @@ bool UartConnectToMka::findMkaDevice(QString* pName)
 void UartConnectToMka::openLogFile()
 {
     // Начало записи в файл телеметрии (TELEMETRIA.TXT)
-    QString filename;
     QDateTime curDateTime = QDateTime::currentDateTime();
     QString date = curDateTime.toString("yyyy_MM_dd__hh_mm_ss");
 //    QTime curTime = QTime::currentTime();
 //    QString time = curTime.toString("hh:mm:ss.zzz\n");
 //    QTextStream stream(logFile);
-    filename.append("LOG/gps_log_");
-    filename.append(date);
-    filename.append(".dat");
-    logFile->setFileName(filename);
+    logFileName.append("mka_log_");
+    logFileName.append(date);
+    logFileName.append(".dat");
+    logFile->setFileName(logFileName);
     if (logFile->open(QIODevice::ReadWrite)) {
-        qDebug() << filename;
+        qDebug() << logFileName;
 //        stream << time;
     }
     else {
@@ -110,12 +119,6 @@ void UartConnectToMka::uartReadData()
 //    qDebug() << serialPort->readAll();
     QByteArray data = serialPort->readAll();
     logFile->write(data);
-}
-
-void UartConnectToMka::uartConnectTimeout()
-{
-    emit connectionFailed();
-    if (serialPort->isOpen())
-        serialPort->close();
-    openSerialPort();
+    emit dataPartReady(data);
+//    qDebug() << data.toHex();
 }
