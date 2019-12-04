@@ -9,3 +9,10 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
+
+
+// TODO:
+// 1) Включить прибор, обновить драйвер
+// 2) Узнать manufacturer, description, serialNumber (findMkaDevice())
+// 3) Изменить findMkaDevice() с учетом параметров п. 2)
+// 4) Задать вопросы по протоколу, если нужно внести соответствующие правки в код

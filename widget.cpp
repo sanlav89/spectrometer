@@ -80,13 +80,9 @@ Widget::Widget(QWidget *parent)
         spectrum.spectrum_cnt[i] = 0;
     }
 //    readTestAndSaveToUartTest();
-
-//    for (int i = 1000; i < 1100; i++)
-//        qDebug("0x%08X", spectrum.bins_sum[i]);
-
     uartConnect = new UartConnectToMka;
-    connect(uartConnect, SIGNAL(dataPartReady(QByteArray)),
-            this, SLOT(parsePacketsFromUart(QByteArray)));
+//    connect(uartConnect, SIGNAL(dataPartReady(QByteArray)),
+//            this, SLOT(parsePacketsFromUart(QByteArray)));
     timer = new QTimer;
     connect(timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
     if (!uartConnect->openSerialPort()) {

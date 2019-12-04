@@ -32,7 +32,7 @@ private slots:
     void uartReadData();
 
 signals:
-    void dataPartReady(QByteArray);
+//    void dataPartReady(QByteArray);
 
 public slots:
 };

@@ -14,8 +14,8 @@ bool UartConnectToMka::openSerialPort()
     QString portName;
     if (findMkaDevice(&portName)) {
         serialPort->setPortName(portName);
-//        serialPort->setBaudRate(Baud600000);
-        serialPort->setBaudRate(QSerialPort::Baud115200);
+        serialPort->setBaudRate(Baud600000);
+//        serialPort->setBaudRate(QSerialPort::Baud115200);
         serialPort->setDataBits(QSerialPort::Data8);
         serialPort->setParity(QSerialPort::NoParity);
         serialPort->setStopBits(QSerialPort::OneStop);
@@ -68,16 +68,16 @@ bool UartConnectToMka::findMkaDevice(QString* pName)
         description = info.description();
         manufacturer = info.manufacturer();
         serialNumber = info.serialNumber();
-        if (manufacturer == "Prolific"
-                && description == "Prolific USB-to-Serial Comm Port"
-                && serialNumber.isEmpty()) {
+//        if (manufacturer == "Prolific"
+//                && description == "Prolific USB-to-Serial Comm Port"
+//                && serialNumber.isEmpty()) {
             qDebug() << info.portName()
                      << description
                      << manufacturer
                      << serialNumber;
             *pName = info.portName();
             isFinded = true;
-        }
+//        }
     }
     return isFinded;
 }
@@ -119,6 +119,6 @@ void UartConnectToMka::uartReadData()
 //    qDebug() << serialPort->readAll();
     QByteArray data = serialPort->readAll();
     logFile->write(data);
-    emit dataPartReady(data);
+//    emit dataPartReady(data);
 //    qDebug() << data.toHex();
 }
