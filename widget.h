@@ -38,7 +38,7 @@ private:
     double dataX[8192];
 
     void closeEvent(QCloseEvent *event);
-    const int seconds = 6;
+    const int seconds = 600;
 
 private slots:
     void onGetSpectrBtn();

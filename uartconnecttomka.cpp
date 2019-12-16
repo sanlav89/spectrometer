@@ -68,16 +68,16 @@ bool UartConnectToMka::findMkaDevice(QString* pName)
         description = info.description();
         manufacturer = info.manufacturer();
         serialNumber = info.serialNumber();
-//        if (manufacturer == "Prolific"
-//                && description == "Prolific USB-to-Serial Comm Port"
-//                && serialNumber.isEmpty()) {
+        if (manufacturer == "FTDI"
+                && description == "USB Serial Port"
+                && serialNumber == "AC01L7T4A") {
             qDebug() << info.portName()
                      << description
                      << manufacturer
                      << serialNumber;
             *pName = info.portName();
             isFinded = true;
-//        }
+        }
     }
     return isFinded;
 }

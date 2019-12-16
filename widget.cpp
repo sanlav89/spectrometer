@@ -225,8 +225,8 @@ void Widget::updateSpectrum(uint8_t* data, uint16_t begin, uint16_t count)
     if (checkSpectrumFlags()) {
 //        spectrum.spectrum_cnt++;
         for (int i = 0; i < 8192; i++) {
-            spectrum.bins_accum[i] = spectrum.bins_sum[i] * 1.0 /
-                                     spectrum.spectrum_cnt[i];
+            spectrum.bins_accum[i] = spectrum.bins_sum[i] * 1.0 /*/
+                                     spectrum.spectrum_cnt[i]*/;
             spectrum.flags[i] = false;
         }
         plot->UpdateCurves(dataX, spectrum.bins_accum, false);
